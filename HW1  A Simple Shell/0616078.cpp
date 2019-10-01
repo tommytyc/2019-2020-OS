@@ -1,3 +1,10 @@
+/*
+Student No.: 0616078
+Student Name: 唐宇謙
+Email: .tommytyc.cs06@nctu.edu.tw
+SE tag: xnxcxtxuxoxsx
+Statement: I am fully aware that this program is not supposed to be posted to a public server, such as a public GitHub repository or a public web page.
+*/
 #include <iostream>
 #include <unistd.h>
 #include <string>
@@ -10,8 +17,6 @@ using namespace std;
 int main(){
 	pid_t pid;
 	bool cnt = false;
-	char cstr[] = "";
-	char tmp[256];
 	char* p;
 	pid = fork();
 	//fork another process
@@ -20,28 +25,23 @@ int main(){
 		exit(-1);
 	}
 	else if(pid == 0){//in child process
-		while(1){
-			cstr = "";
+			char* cstr = new char[256];
+			cout<<">";
 			cin.getline(cstr, 256);
 			p = strtok(cstr, " ");
-			while(p != NULL){
+			while(1){
 				if(cnt){
 					execlp(cstr, cstr, p, NULL);
-					break;
 				}
 				else{
 					p = strtok(NULL, "");
 					cnt = true;
 				}
-				
 			}
-		}
-		
-		exit(0);
 	}
 	else{//in parent process
 		wait(NULL);
-		exit(0);
+		// exit(0);
 	}
 	return 0;
 }
