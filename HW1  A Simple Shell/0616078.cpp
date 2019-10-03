@@ -1,7 +1,7 @@
 /*
 Student No.: 0616078
 Student Name: 唐宇謙
-Email: .tommytyc.cs06@nctu.edu.tw
+Email: tommytyc.cs06@nctu.edu.tw
 SE tag: xnxcxtxuxoxsx
 Statement: I am fully aware that this program is not supposed to be posted to a public server, such as a public GitHub repository or a public web page.
 */
@@ -27,32 +27,17 @@ int main(){
 		exit(-1);
 	}
 	else if(pid == 0){//in child process
-		char* cstr1 = new char[256];
-		vector<string> vstr;
-		cout<<">";
-		cin.getline(cstr1, 256);
-		p = strtok(cstr1, " ");
-		while(p != NULL){
-			vstr.push_back(p);
-			p = strtok(NULL, " ");
+		while(1){
+			char* cstr1 = new char[256];
+			cout<<">";
+			cin.getline(cstr1, 256);
+			int status;
+			status = system(cstr1);
+			if(status == -1){
+				cerr<<"Error.\n";
+			}
 		}
-		delete [] cstr1;
-
-		//dynamic memory allocation
-		char** cstr2 = new char*[vstr.size()+1];
-		for(int i = 0; i <= vstr.size(); i++){
-			cstr2[i] = new char[256];
-		}
-
-		//copy the string
-		for(int i = 0; i < vstr.size(); i++){
-			strcpy(cstr2[i], vstr[i].c_str());
-		}
-		cstr2[vstr.size()] = 0;
-		exv = execvp(cstr2[0], cstr2);
-		for(int i = 0; i < vstr.size(); i++){
-			cout<<*cstr2[i]<<endl;
-		}
+		exit(0);		
 	}
 	else{//in parent process
 		wait(NULL);
