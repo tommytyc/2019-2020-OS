@@ -29,11 +29,12 @@ int main(){
 	else if(pid == 0){//in child process
 		while(1){
 			pid_t tmppid;
+			bool andflag = false;
 			tmppid = fork();
-			if(tmppid < 0){
+			if(tmppid < 0){//fork error
 				cerr<<"Child Process Fork Failed!\n";
 			}
-			else if(tmppid == 0){
+			else if(tmppid == 0){//in child process
 				char* cstr1 = new char[256];
 				vector<string> vstr;
 				cout<<">";
@@ -53,12 +54,21 @@ int main(){
 
 				//copy the string
 				for(int i = 0; i < vstr.size(); i++){
+					if(vstr[i] == "&"){
+						andflag = true;
+					}
 					strcpy(cstr2[i], vstr[i].c_str());
 				}
 				cstr2[vstr.size()] = 0;
+				//check whether the command has "&"
+				if(andflag){
+					for(int i = 0; i <= vstr.size(); i++){
+						cstr2[i] = 0;
+					}
+				}
 				exv = execvp(cstr2[0], cstr2);
 			}
-			else{
+			else{//in parent process
 				wait(NULL);
 			}
 		}
