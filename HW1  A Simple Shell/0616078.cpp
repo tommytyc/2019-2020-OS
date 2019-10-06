@@ -17,66 +17,82 @@ using namespace std;
 
 int main(){
 	pid_t pid;
-	int exv = 0;// the return value of execvp
-	bool cnt = false;
+	int exv = 0, pipepos = 0, redpos = 0;// the return value of execvp
+	bool andflag = false, pipeflag = false, redflag = false;
 	char* p;
-	pid = fork();
-	//fork another process
-	if(pid < 0){//for error situation
-		cerr<<"Fork Failed!\n";
-		exit(-1);
-	}
-	else if(pid == 0){//in child process
-		while(1){
-			pid_t tmppid;
-			bool andflag = false;
-			tmppid = fork();
-			if(tmppid < 0){//fork error
-				cerr<<"Child Process Fork Failed!\n";
+	vector<string> vstr;
+	while(1){
+		char* cstr1 = new char[256];
+		vstr.clear();
+		cout<<">";
+		cin.getline(cstr1, 256);
+		p = strtok(cstr1, " ");
+		while(p != NULL){
+			vstr.push_back(p);
+			p = strtok(NULL, " ");
+		}
+		if(vstr.back() == "&"){
+			vstr.pop_back();
+			andflag = true;
+		}
+		delete [] cstr1;
+		int len = vstr.size();
+
+		//dynamic memory allocation
+		char** cstr2 = new char*[len+1];
+		for(int i = 0; i <= len; i++){
+			cstr2[i] = new char[256];
+		}
+
+		//copy the string
+		for(int i = 0; i < len; i++){
+			if(vstr[i] == "|"){
+				pipeflag = true;
+				pipepos = i;
 			}
-			else if(tmppid == 0){//in child process
-				char* cstr1 = new char[256];
-				vector<string> vstr;
-				cout<<">";
-				cin.getline(cstr1, 256);
-				p = strtok(cstr1, " ");
-				while(p != NULL){
-					vstr.push_back(p);
-					p = strtok(NULL, " ");
-				}
-				delete [] cstr1;
+			else if(vstr[i] == ">"){
+				redflag = true;
+				redpos = i;
+			}	
+			strcpy(cstr2[i], vstr[i].c_str());
+		}
 
-				//dynamic memory allocation
-				char** cstr2 = new char*[vstr.size()+1];
-				for(int i = 0; i <= vstr.size(); i++){
-					cstr2[i] = new char[256];
-				}
+		cstr2[vstr.size()] = 0;
 
-				//copy the string
-				for(int i = 0; i < vstr.size(); i++){
-					if(vstr[i] == "&"){
-						andflag = true;
-					}
-					strcpy(cstr2[i], vstr[i].c_str());
-				}
-				cstr2[vstr.size()] = 0;
-				//check whether the command has "&"
-				if(andflag){
-					for(int i = 0; i <= vstr.size(); i++){
-						cstr2[i] = 0;
-					}
-				}
+		pid = fork();
+		if(!andflag){
+			if(pid < 0){
+				cerr<<"Fork Error!\n";
+			}
+			else if(pid == 0){//child process
 				exv = execvp(cstr2[0], cstr2);
 			}
-			else{//in parent process
+			else{
+				wait(NULL);
+				for(int i = 0; i <= len; i++){
+					delete [] cstr2[i];
+				}
+				delete [] cstr2;
+			}
+		}
+
+		else{
+			if(pid == 0){//child process
+				pid_t pid2;
+				if((pid2 = fork()) < 0){
+					cerr<<"Fork Error!\n";
+				}
+				else if(pid2 == 0){
+					exv = execvp(cstr2[0], cstr2);
+				}
+				else{
+					exit(0);
+				}
+			}
+			else{
 				wait(NULL);
 			}
 		}
-		exit(0);
-	}
-	else{//in parent process
-		wait(NULL);
-		exit(0);
 	}
 	return 0;
 }
