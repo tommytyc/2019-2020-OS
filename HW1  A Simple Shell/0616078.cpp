@@ -96,25 +96,33 @@ int main(){
 				}
 				else if(pid == 0){//child process
 					close(pipefd[0]);
-					dup2(pipefd[1], 1);
+					dup2(pipefd[1], STDOUT_FILENO);
 					close(pipefd[1]);
-					exv = execvp(cpystr2[0], cpystr2);
+					exv = execvp(cpystr1[0], cpystr1);
 				}
 				else{
-					close(pipefd[0]);
-					dup2(pipefd[1], 1);
 					close(pipefd[1]);
+					dup2(pipefd[0], 0);
+					close(pipefd[0]);
 					wait(NULL);
 
-					//free the allocated memory
-					// Free(cstr2, len);
-					// Free(cpystr2, (len - pipepos - 1));
-					execvp(cpystr1[0], cpystr1);
+					// free the allocated memory
+					Free(cstr2, len);
+					Free(cpystr1, pipepos);
+
+					pid_t pid2;
+					if((pid2 = fork()) < 0){
+						cerr<<"Fork Error!\n";
+					}
+					else if(pid2 == 0){
+						execvp(cpystr2[0], cpystr2);
+					}
+					else{
+						wait(NULL);
+						Free(cpystr2, (len - pipepos - 1));
+					}
 				}
 			}
-			// else if(redflag){//deal with redirect
-
-			// }
 			else{
 				if(pid < 0){
 					cerr<<"Fork Error!\n";
