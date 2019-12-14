@@ -15,26 +15,14 @@ using namespace std;
 
 class pqpair {
 public:
+	pqpair(){};
 	pqpair(int p, int c, int t){
 		page = p;
 		cnt = c;
 		time = t;
 	};
 	int page, cnt, time;
-	bool operator>(pqpair p);
 };
-
-bool pqpair::operator>(pqpair p){
-	if(cnt > p.cnt){
-		return true;
-	}
-	else if(cnt == p.cnt && time > p.time){
-		return true;
-	}
-	else{
-		return false;
-	}	
-}
 
 int main(int argc, char *argv[]){
 	fstream fi;
@@ -52,7 +40,7 @@ int main(int argc, char *argv[]){
 	double pfratio = 0;
 	gettimeofday(&start, 0);
 	for(int fnumber = 64; fnumber <= 512; fnumber *= 2){
-		hit = 0; miss = 0; tmp = 0; timestamp = 0; pfratio = 0;
+		hit = 0; miss = 0; tmp = 0; timestamp = 0; pfratio = 0; len = 0;
 		fi.open(input, ios::in);
 		map<int, pqpair> hashall;
 		map<int, pqpair>::iterator itall;
@@ -64,9 +52,7 @@ int main(int argc, char *argv[]){
 			timestamp++;
 			itall = hashall.find(tmp);
 			if(itall == hashall.end()){
-				pqpair* tmppq = new pqpair(tmp, 1, timestamp);
-				hashall[tmp] = *tmppq;
-				delete tmppq;
+				hashall[tmp] = pqpair(tmp, 1, timestamp);
 			}
 			else{
 				itall->second.cnt++;
@@ -77,55 +63,65 @@ int main(int argc, char *argv[]){
 				hit++;
 				hashpq[tmp]->cnt++;
 				hashpq[tmp]->time = timestamp;
-				for(itl1 = pq.begin(); itl1 != pq.end(); itl1++){
-					itl2 = (itl1++);
-					itl1--;
-					if(*itl1 > *itl2){
-						pqpair pqtmp = *itl2;
-						itl1 = itl2;
-						*itl2 = pqtmp;
+				for(itl1 = hashpq[tmp]; itl1->page != pq.back().page; itl1++){
+					itl1++; itl2 = itl1; itl1--;
+					if((*itl1).cnt > (*itl2).cnt || ((*itl1).cnt == (*itl2).cnt && (*itl1).time > (*itl2).time)){
+						hashpq[(*itl2).page] = itl1;
+						hashpq[(*itl1).page] = itl2;
+						(*itl1).page^=(*itl2).page^=(*itl1).page^=(*itl2).page;
+						(*itl1).cnt^=(*itl2).cnt^=(*itl1).cnt^=(*itl2).cnt;
+						(*itl1).time^=(*itl2).time^=(*itl1).time^=(*itl2).time;
 					}
-					if(itl1->page == tmp){
+					else{
 						hashpq[tmp] = itl1;
+						break;
 					}
 				}
 			}
-			else if(pq.size() < fnumber){	//not in the list, but no need to replace page
+			else if(len < fnumber){				//not in the list, but no need to replace page
 				miss++;
 				pqpair *tmppq = new pqpair(tmp, 1, timestamp);
 				pq.push_front(*tmppq);
+				len++;
+				hashpq[tmp] = pq.begin();
 				delete tmppq;
-				for(itl1 = pq.begin(); itl1 != pq.end(); itl1++){
-					itl2 = (itl1++);
-					itl1--;
-					if(*itl1 > *itl2){
-						pqpair pqtmp = *itl2;
-						itl1 = itl2;
-						*itl2 = pqtmp;
+				for(itl1 = hashpq[tmp]; itl1->page != pq.back().page; itl1++){
+					itl1++; itl2 = itl1; itl1--;				
+					if((*itl1).cnt > (*itl2).cnt || ((*itl1).cnt == (*itl2).cnt && (*itl1).time > (*itl2).time)){
+						hashpq[(*itl2).page] = itl1;
+						hashpq[(*itl1).page] = itl2;
+						(*itl1).page^=(*itl2).page^=(*itl1).page^=(*itl2).page;
+						(*itl1).cnt^=(*itl2).cnt^=(*itl1).cnt^=(*itl2).cnt;
+						(*itl1).time^=(*itl2).time^=(*itl1).time^=(*itl2).time;
 					}
-					if(itl1->page == tmp){
+					else{
 						hashpq[tmp] = itl1;
+						break;
 					}
+					
 				}
 			}
-			else{							//not in the list, and need to replace page
+			else{								//not in the list, and need to replace page
 				miss++;
-				if(hashall[tmp] > pq.front()){
+				if(hashall[tmp].cnt > pq.front().cnt || (hashall[tmp].cnt == pq.front().cnt && hashall[tmp].time > pq.front().time)){
 					hashall[pq.front().page].cnt = 0;
 					hashall[pq.front().page].time = 0;
 					hashpq.erase(pq.front().page);
 					pq.pop_front();
 					pq.push_front(hashall[tmp]);
-					for(itl1 = pq.begin(); itl1 != pq.end(); itl1++){
-						itl2 = (itl1++);
-						itl1--;
-						if(*itl1 > *itl2){
-							pqpair pqtmp = *itl2;
-							itl1 = itl2;
-							*itl2 = pqtmp;
+					hashpq[tmp] = pq.begin();
+					for(itl1 = hashpq[tmp]; itl1->page != pq.back().page; itl1++){
+						itl1++; itl2 = itl1; itl1--;
+						if((*itl1).cnt > (*itl2).cnt || ((*itl1).cnt == (*itl2).cnt && (*itl1).time > (*itl2).time)){
+							hashpq[(*itl2).page] = itl1;
+							hashpq[(*itl1).page] = itl2;
+							(*itl1).page^=(*itl2).page^=(*itl1).page^=(*itl2).page;
+							(*itl1).cnt^=(*itl2).cnt^=(*itl1).cnt^=(*itl2).cnt;
+							(*itl1).time^=(*itl2).time^=(*itl1).time^=(*itl2).time;
 						}
-						if(itl1->page == tmp){
+						else{
 							hashpq[tmp] = itl1;
+							break;
 						}
 					}
 
