@@ -1,5 +1,6 @@
 #include<iostream>
 #include <time.h>
+#include <bits/stdc++.h>
 #include <fstream>
 using namespace std;
 int main() {
@@ -13,4 +14,5 @@ int main() {
 		file << rand() % num << " ";
 	}
 	file.close();
+	return 0;
 }
